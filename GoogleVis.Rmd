@@ -1,0 +1,120 @@
+---
+title: "GoogleVis"
+author: "Krishna Kuyate"
+date: "24 November 2018"
+output: html_document
+---
+
+#Having Fun with googleVis
+
+##Last data preps 
+```{r include=FALSE}
+##Part1
+
+# Load rdatamarket and initialize client
+library("rdatamarket")
+dminit(NULL)
+
+# Pull in life expectancy and population data
+life_expectancy <- dmlist("15r2!hrp")
+population <- dmlist("1cfl!r3d")
+
+# Inspect life_expectancy and population with head() or tail()
+head(life_expectancy)
+tail(life_expectancy)
+head(population)
+tail(population)
+# Load in the yearly GDP data frame for each country as gdp
+dmlist("15c9!hd1")->yu
+as.data.frame(yu)->gdp
+# Inspect gdp with tail()
+tail(gdp)
+
+###
+str(life_expectancy)
+str(population)
+str(gdp)
+# Load in the plyr package
+library("plyr")
+
+# Rename the Value for each dataset
+names(gdp)[3] <- "GDP"
+names(population)[3]<-"Population"
+names(life_expectancy)[3]<-"LifeExpectancy"
+
+# Use plyr to join your three data frames into one: development 
+gdp_life_exp <- join(gdp,life_expectancy)
+development <- join(gdp_life_exp,population)
+##Last data preps
+
+# development and selection are available in the workspace
+
+# Subset development with Year on or before 2008
+development_complete <- subset(development,Year<=1960)
+
+# Print out tail of development_complete
+tail(development_complete)
+
+# Subset development_complete: keep only countries in selection
+
+unique(development_complete$Country)->p
+p[8:16]->selection
+
+
+development_motion <- subset(development_complete ,Country%in%selection)
+tail(development_motion)
+
+```
+```{r echo=FALSE}
+development_motion 
+```
+```{r include=FALSE}
+###googleVis - the prelude
+library(googleVis)
+
+```
+
+## Create the interactive motion chart
+```{r echo=FALSE}
+# Create the interactive motion chart
+motion_graph <- gvisMotionChart(development_motion,
+                                idvar = "Country",
+                                timevar ="Year")
+
+# Plot motion_graph
+
+plot(motion_graph)
+
+```
+
+## Update the interactive motion chart
+```{r echo=FALSE}
+# Update the interactive motion chart
+motion_graph <- gvisMotionChart(development_motion,
+                                idvar = "Country",
+                                timevar = "Year",
+                                xvar = "GDP",
+                                yvar="LifeExpectancy",
+                                sizevar="Population")
+
+# Plot motion_graph
+plot(motion_graph)
+```
+
+### Create a new column that corresponds to the log of the GDP column
+```{r echo=FALSE}
+# Create a new column that corresponds to the log of the GDP column
+development_motion$logGDP <-log(development_motion$GDP)
+
+# Create the interactive motion chart with R and `gvisMotionChart())`
+motion_graph <- gvisMotionChart(development_motion,
+                                idvar = "Country",
+                                timevar = "Year",
+                                xvar = "logGDP",
+                                yvar = "LifeExpectancy",
+                                sizevar = "Population")
+
+# Plot your new motion graph with the help of `plot()`
+plot(motion_graph )
+```
+
